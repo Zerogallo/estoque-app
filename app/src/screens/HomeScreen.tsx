@@ -175,13 +175,7 @@ export default function HomeScreen() {
         ))}
       </View>
 
-      {/* Botão Flutuante */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => navigation.navigate('Produtos')}
-      >
-        <Icon name="add" size={30} color="#fff" />
-      </TouchableOpacity>
+    
     </ScrollView>
   );
 }

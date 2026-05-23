@@ -1,0 +1,26 @@
+[
+  {
+    "id": "1779531821217",
+    "date": "2026-05-23T10:23:41.217Z",
+    "products": [
+      {
+        "productId": "1779530396436",
+        "name": "Regua",
+        "price": 2,
+        "quantity": 2,
+        "photo": "/uploads/1779530396435.jpeg"
+      },
+      {
+        "productId": "1779530483641",
+        "name": "Caderno Universitário ",
+        "price": 24,
+        "quantity": 1,
+        "photo": "/uploads/1779530483640.jpeg"
+      }
+    ],
+    "customerName": "Renan",
+    "totalValue": 28,
+    "employeeName": "test",
+    "employeeId": "1779525783063"
+  }
+]

@@ -10,7 +10,7 @@ import {
   TextInput,
   Modal,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
+import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -36,6 +36,8 @@ export default function CartScreen() {
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const navigation = useNavigation();
+
+  const API_BASE_URL = api.defaults.baseURL?.replace('/api', '') || 'http://192.168.1.100:3000';
 
   const loadCart = async () => {
     try {
@@ -153,12 +155,12 @@ export default function CartScreen() {
     <View style={styles.cartItem}>
       {item.photo ? (
         <Image
-          source={{ uri: `http://192.168.1.70:3000${item.photo}` }}
+          source={{ uri: `${API_BASE_URL}${item.photo}` }}
           style={styles.productImage}
         />
       ) : (
         <View style={styles.imagePlaceholder}>
-          <Icon name="image-outline" size={30} color="#ccc" />
+          <Ionicons name="image-outline" size={30} color="#ccc" />
         </View>
       )}
       
@@ -172,14 +174,14 @@ export default function CartScreen() {
           onPress={() => updateQuantity(item.productId, item.quantity - 1)}
           style={styles.quantityButton}
         >
-          <Icon name="remove" size={20} color="#007AFF" />
+          <Ionicons name="remove" size={20} color="#007AFF" />
         </TouchableOpacity>
         <Text style={styles.quantity}>{item.quantity}</Text>
         <TouchableOpacity
           onPress={() => updateQuantity(item.productId, item.quantity + 1)}
           style={styles.quantityButton}
         >
-          <Icon name="add" size={20} color="#007AFF" />
+          <Ionicons name="add" size={20} color="#007AFF" />
         </TouchableOpacity>
       </View>
       
@@ -187,7 +189,7 @@ export default function CartScreen() {
         onPress={() => removeItem(item.productId)}
         style={styles.removeButton}
       >
-        <Icon name="trash-outline" size={22} color="#FF3B30" />
+        <Ionicons name="trash-outline" size={22} color="#FF3B30" />
       </TouchableOpacity>
     </View>
   );
@@ -196,13 +198,16 @@ export default function CartScreen() {
     <View style={styles.container}>
       {!cart?.items.length ? (
         <View style={styles.emptyState}>
-          <Icon name="cart-outline" size={80} color="#ccc" />
+          <Ionicons name="cart-outline" size={80} color="#ccc" />
           <Text style={styles.emptyText}>Carrinho vazio</Text>
+          <Text style={styles.emptySubtext}>
+            Adicione produtos escaneando QR Codes
+          </Text>
           <TouchableOpacity
             style={styles.scanButton}
             onPress={() => navigation.navigate('QRScanner')}
           >
-            <Icon name="qr-code" size={24} color="#fff" />
+            <Ionicons name="qr-code" size={24} color="#fff" />
             <Text style={styles.scanButtonText}>Ler QR Code</Text>
           </TouchableOpacity>
         </View>
@@ -227,18 +232,28 @@ export default function CartScreen() {
             
             <View style={styles.footerButtons}>
               <TouchableOpacity style={styles.clearButton} onPress={clearCart}>
-                <Text style={styles.clearButtonText}>Limpar</Text>
+                <Text style={styles.clearButtonText}>Limpar Carrinho</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.checkoutButton}
                 onPress={() => setModalVisible(true)}
               >
-                <Text style={styles.checkoutButtonText}>Finalizar</Text>
+                <Text style={styles.checkoutButtonText}>Finalizar Venda</Text>
               </TouchableOpacity>
             </View>
           </View>
         </>
       )}
+
+    
+
+      {/* Botão Flutuante para QR Code (canto inferior esquerdo) */}
+      <TouchableOpacity
+        style={styles.fabQR}
+        onPress={() => navigation.navigate('QRScanner')}
+      >
+        <Ionicons name="qr-code" size={30} color="#fff" />
+      </TouchableOpacity>
 
       <Modal
         animationType="slide"
@@ -256,6 +271,7 @@ export default function CartScreen() {
               value={customerName}
               onChangeText={setCustomerName}
               placeholder="Digite o nome do cliente"
+              placeholderTextColor="#999"
             />
             
             <View style={styles.modalSummary}>
@@ -280,7 +296,7 @@ export default function CartScreen() {
                 disabled={loading}
               >
                 <Text style={styles.modalConfirmText}>
-                  {loading ? 'Processando...' : 'Confirmar'}
+                  {loading ? 'Processando...' : 'Confirmar Saída'}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -306,6 +322,11 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 12,
     alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   productImage: {
     width: 60,
@@ -329,11 +350,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#333',
+    marginBottom: 4,
   },
   itemPrice: {
     fontSize: 14,
     color: '#007AFF',
-    marginTop: 4,
+    fontWeight: '500',
   },
   quantityControls: {
     flexDirection: 'row',
@@ -354,6 +376,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 12,
     minWidth: 30,
     textAlign: 'center',
+    color: '#333',
   },
   removeButton: {
     padding: 8,
@@ -363,6 +386,11 @@ const styles = StyleSheet.create({
     padding: 20,
     borderTopWidth: 1,
     borderTopColor: '#e1e5e9',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   summary: {
     flexDirection: 'row',
@@ -420,24 +448,53 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   emptyText: {
-    fontSize: 18,
+    fontSize: 20,
+    fontWeight: 'bold',
     color: '#999',
     marginTop: 16,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#ccc',
+    marginTop: 8,
     marginBottom: 20,
+    textAlign: 'center',
   },
   scanButton: {
     flexDirection: 'row',
     backgroundColor: '#007AFF',
-    paddingHorizontal: 20,
+    paddingHorizontal: 25,
     paddingVertical: 12,
     borderRadius: 25,
     alignItems: 'center',
     gap: 10,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
   },
   scanButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  fabQR: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    top: 650,
+    backgroundColor: '#5856D6',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
   },
   modalContainer: {
     flex: 1,
@@ -450,17 +507,24 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     width: '85%',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
   },
   modalTitle: {
     fontSize: 22,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 20,
+    color: '#333',
   },
   label: {
     fontSize: 14,
     color: '#666',
     marginBottom: 5,
+    fontWeight: '500',
   },
   input: {
     borderWidth: 1,
@@ -484,7 +548,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   modalTotal: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#007AFF',
   },

@@ -18,15 +18,6 @@ import * as ImagePicker from 'expo-image-picker';
 import api from '../services/api';
 import { useFocusEffect } from '@react-navigation/native';
 
-// Tentar importar o QR Code, se falhar usa fallback
-let QRCodeComponent: any = null;
-try {
-  const QRCode = require('react-native-qrcode-svg');
-  QRCodeComponent = QRCode.default;
-} catch (error) {
-  console.log('QRCode SVG não disponível, usando fallback');
-}
-
 interface Product {
   id: string;
   name: string;
@@ -58,6 +49,8 @@ export default function ProductsScreen() {
     photo: null as string | null,
   });
 
+  const API_BASE_URL = api.defaults.baseURL?.replace('/api', '') || 'http://192.168.1.100:3000';
+
   const loadProducts = async () => {
     try {
       const response = await api.get('/products');
@@ -81,53 +74,37 @@ export default function ProductsScreen() {
   };
 
   const pickImage = async () => {
-    try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      
-      if (status !== 'granted') {
-        Alert.alert('Erro', 'Precisamos de permissão para acessar suas fotos');
-        return;
-      }
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Erro', 'Precisamos de permissão para acessar suas fotos');
+      return;
+    }
 
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        quality: 0.8,
-        base64: false,
-      });
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.8,
+    });
 
-      if (!result.canceled && result.assets && result.assets[0]) {
-        const selectedImage = result.assets[0];
-        setFormData({ ...formData, photo: selectedImage.uri });
-      }
-    } catch (error) {
-      console.error('Erro ao selecionar imagem:', error);
-      Alert.alert('Erro', 'Erro ao selecionar imagem');
+    if (!result.canceled) {
+      setFormData({ ...formData, photo: result.assets[0].uri });
     }
   };
 
   const takePhoto = async () => {
-    try {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      
-      if (status !== 'granted') {
-        Alert.alert('Erro', 'Precisamos de permissão para usar a câmera');
-        return;
-      }
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Erro', 'Precisamos de permissão para usar a câmera');
+      return;
+    }
 
-      const result = await ImagePicker.launchCameraAsync({
-        allowsEditing: true,
-        quality: 0.8,
-        base64: false,
-      });
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      quality: 0.8,
+    });
 
-      if (!result.canceled && result.assets && result.assets[0]) {
-        const photo = result.assets[0];
-        setFormData({ ...formData, photo: photo.uri });
-      }
-    } catch (error) {
-      console.error('Erro ao tirar foto:', error);
-      Alert.alert('Erro', 'Erro ao tirar foto');
+    if (!result.canceled) {
+      setFormData({ ...formData, photo: result.assets[0].uri });
     }
   };
 
@@ -150,46 +127,75 @@ export default function ProductsScreen() {
     }
 
     setLoading(true);
-    const data = new FormData();
-    data.append('name', formData.name);
-    data.append('price', formData.price);
-    data.append('type', formData.type);
-    data.append('color', formData.color);
-    data.append('description', formData.description);
-    data.append('quantity', formData.quantity);
-    data.append('minLimit', formData.minLimit || '0');
     
-    if (formData.photo) {
-      const uriParts = formData.photo.split('.');
-      const fileType = uriParts[uriParts.length - 1];
-      
-      const file = {
-        uri: formData.photo,
-        name: `photo_${Date.now()}.${fileType}`,
-        type: `image/${fileType}`,
-      } as any;
-      
-      data.append('photo', file);
-    }
-
     try {
       if (selectedProduct) {
-        await api.put(`/products/${selectedProduct.id}`, data, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        Alert.alert('Sucesso', 'Produto atualizado');
+        // EDITAR PRODUTO - Enviar como JSON em vez de FormData
+        const updateData = {
+          name: formData.name,
+          price: parseFloat(formData.price),
+          type: formData.type,
+          color: formData.color,
+          description: formData.description,
+          quantity: parseInt(formData.quantity),
+          minLimit: parseInt(formData.minLimit) || 0,
+        };
+        
+        console.log('Enviando atualização:', updateData);
+        
+        const response = await api.put(`/products/${selectedProduct.id}`, updateData);
+        
+        if (response.status === 200) {
+          Alert.alert('Sucesso', 'Produto atualizado com sucesso!');
+          resetForm();
+          loadProducts();
+        }
       } else {
-        await api.post('/products', data, {
+        // CRIAR NOVO PRODUTO - Usar FormData para imagem
+        const data = new FormData();
+        data.append('name', formData.name);
+        data.append('price', formData.price);
+        data.append('type', formData.type || '');
+        data.append('color', formData.color || '');
+        data.append('description', formData.description || '');
+        data.append('quantity', formData.quantity);
+        data.append('minLimit', formData.minLimit || '0');
+        
+        if (formData.photo) {
+          const uriParts = formData.photo.split('.');
+          const fileType = uriParts[uriParts.length - 1];
+          data.append('photo', {
+            uri: formData.photo,
+            name: `photo.${Date.now()}.${fileType}`,
+            type: `image/${fileType}`,
+          } as any);
+        }
+
+        const response = await api.post('/products', data, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
-        Alert.alert('Sucesso', 'Produto criado');
+        
+        if (response.status === 200 || response.status === 201) {
+          Alert.alert('Sucesso', 'Produto criado com sucesso!');
+          resetForm();
+          loadProducts();
+        }
       }
-      
-      resetForm();
-      loadProducts();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao salvar:', error);
-      Alert.alert('Erro', 'Erro ao salvar produto');
+      
+      if (error.response) {
+        // O servidor respondeu com um status de erro
+        console.error('Dados do erro:', error.response.data);
+        Alert.alert('Erro', `Erro ${error.response.status}: ${error.response.data?.error || 'Erro ao salvar produto'}`);
+      } else if (error.request) {
+        // A requisição foi feita mas não houve resposta
+        console.error('Sem resposta do servidor');
+        Alert.alert('Erro', 'Servidor não está respondendo. Verifique sua conexão.');
+      } else {
+        // Algo aconteceu na configuração da requisição
+        Alert.alert('Erro', error.message || 'Erro ao salvar produto');
+      }
     } finally {
       setLoading(false);
     }
@@ -209,8 +215,8 @@ export default function ProductsScreen() {
               await api.delete(`/products/${product.id}`);
               loadProducts();
               Alert.alert('Sucesso', 'Produto excluído');
-            } catch (error) {
-              Alert.alert('Erro', 'Erro ao excluir produto');
+            } catch (error: any) {
+              Alert.alert('Erro', error.response?.data?.error || 'Erro ao excluir produto');
             }
           },
         },
@@ -238,36 +244,13 @@ export default function ProductsScreen() {
     setQrModalVisible(true);
   };
 
-  const renderQRCode = (value: string, size: number = 200) => {
-    if (QRCodeComponent) {
-      return (
-        <QRCodeComponent
-          value={value}
-          size={size}
-          color="#000"
-          backgroundColor="#fff"
-        />
-      );
-    } else {
-      // Fallback quando SVG não está disponível
-      return (
-        <View style={[styles.fallbackQR, { width: size, height: size }]}>
-          <Ionicons name="qr-code-outline" size={size - 60} color="#007AFF" />
-          <Text style={styles.fallbackText}>QR Code</Text>
-          <Text style={styles.fallbackValue} numberOfLines={2}>
-            {value}
-          </Text>
-        </View>
-      );
-    }
-  };
-
   const renderProduct = ({ item }: { item: Product }) => (
     <View style={styles.productCard}>
       {item.photo ? (
         <Image 
-          source={{ uri: `http://192.168.1.70:3000${item.photo}` }} 
-          style={styles.productImage} 
+          source={{ uri: `${API_BASE_URL}${item.photo}` }}
+          style={styles.productImage}
+          onError={(e) => console.log('Erro ao carregar imagem:', e.nativeEvent.error)}
         />
       ) : (
         <View style={styles.imagePlaceholder}>
@@ -296,7 +279,7 @@ export default function ProductsScreen() {
               description: item.description || '',
               quantity: item.quantity.toString(),
               minLimit: item.minLimit.toString(),
-              photo: item.photo,
+              photo: null, // Não carregar a foto antiga para edição
             });
             setModalVisible(true);
           }}
@@ -362,7 +345,9 @@ export default function ProductsScreen() {
               ) : (
                 <View style={styles.imagePlaceholderLarge}>
                   <Ionicons name="camera" size={40} color="#999" />
-                  <Text style={styles.imageText}>Adicionar foto</Text>
+                  <Text style={styles.imageText}>
+                    {selectedProduct ? 'Foto atual não será alterada' : 'Adicionar foto'}
+                  </Text>
                 </View>
               )}
             </TouchableOpacity>
@@ -436,7 +421,9 @@ export default function ProductsScreen() {
                 {loading ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.submitButtonText}>Salvar</Text>
+                  <Text style={styles.submitButtonText}>
+                    {selectedProduct ? 'Atualizar' : 'Salvar'}
+                  </Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -463,7 +450,22 @@ export default function ProductsScreen() {
             <Text style={styles.qrTitle}>QR Code do Produto</Text>
             <Text style={styles.qrProductName}>{selectedProduct?.name}</Text>
             
-            {selectedProduct?.qrCode && renderQRCode(selectedProduct.qrCode, 200)}
+            {selectedProduct?.qrCode ? (
+              <Image 
+                source={{ uri: selectedProduct.qrCode }} 
+                style={styles.qrImage}
+                resizeMode="contain"
+              />
+            ) : (
+              <View style={styles.qrLoading}>
+                <ActivityIndicator size="large" color="#007AFF" />
+                <Text style={styles.qrLoadingText}>Carregando QR Code...</Text>
+              </View>
+            )}
+            
+            <Text style={styles.qrInfoText}>
+              Escaneie para adicionar ao carrinho
+            </Text>
             
             <TouchableOpacity
               style={styles.qrCloseButton}
@@ -603,6 +605,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     color: '#999',
     fontSize: 12,
+    textAlign: 'center',
   },
   input: {
     borderWidth: 1,
@@ -673,7 +676,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 30,
     alignItems: 'center',
-    width: '80%',
+    width: '85%',
     position: 'relative',
   },
   qrCloseIcon: {
@@ -683,7 +686,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   qrTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 10,
     color: '#333',
@@ -693,35 +696,39 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 20,
   },
-  fallbackQR: {
-    backgroundColor: '#f8f9fa',
+  qrImage: {
+    width: 250,
+    height: 250,
+    marginVertical: 10,
+    borderRadius: 10,
+  },
+  qrLoading: {
+    width: 250,
+    height: 250,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#f8f9fa',
     borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#007AFF',
-    borderStyle: 'dashed',
-    padding: 20,
+    marginVertical: 10,
   },
-  fallbackText: {
+  qrLoadingText: {
     marginTop: 10,
-    fontSize: 12,
-    color: '#007AFF',
-    fontWeight: 'bold',
-  },
-  fallbackValue: {
-    marginTop: 5,
-    fontSize: 10,
     color: '#666',
+  },
+  qrInfoText: {
+    fontSize: 12,
+    color: '#999',
+    marginTop: 15,
     textAlign: 'center',
-    maxWidth: 180,
   },
   qrCloseButton: {
     marginTop: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 30,
+    paddingVertical: 12,
+    paddingHorizontal: 40,
     backgroundColor: '#007AFF',
     borderRadius: 8,
+    width: '100%',
+    alignItems: 'center',
   },
   qrCloseText: {
     color: '#fff',
