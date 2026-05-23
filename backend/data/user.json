@@ -1,0 +1,9 @@
+[
+  {
+    "id": "1",
+    "name": "Admin",
+    "email": "admin@estoque.com",
+    "password": "$2a$10$NzYaXGkKXvXyZVZ.Z.ZXhO4VxYqRrXvXyZVZ.Z.ZXhO",
+    "role": "admin"
+  }
+]
