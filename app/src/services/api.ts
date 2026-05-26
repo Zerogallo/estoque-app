@@ -4,7 +4,7 @@ import { Platform } from 'react-native';
 
 // Configuração base da API
 // Substitua pelo IP do seu computador na rede local
-const API_URL = 'http://192.168.1.70:3000/api';
+const API_URL = 'http://192.168.1.73:3000/api';
 
 // Para iOS no emulador
 // const API_URL = 'http://localhost:3000/api';

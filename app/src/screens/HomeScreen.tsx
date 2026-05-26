@@ -7,6 +7,7 @@ import {
   ScrollView,
   Alert,
   RefreshControl,
+  Image,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -89,6 +90,10 @@ export default function HomeScreen() {
           <Text style={styles.welcome}>Bem-vindo,</Text>
           <Text style={styles.userName}>{user?.name}</Text>
         </View>
+          <Image 
+                            source={require('../../assets/logo.png')} 
+                            style={styles.logo} 
+                          />
         <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
           <Icon name="exit-outline" size={24} color="#fff" />
         </TouchableOpacity>
@@ -119,7 +124,7 @@ export default function HomeScreen() {
 
       {/* Produtos com Estoque Baixo */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>⚠️ Produtos em Falta</Text>
+        <Text style={styles.sectionTitle}><Icon name="warning-outline" size={32} color="#FF3B30" /> Produtos em Falta</Text>
         {lowStockProducts.length === 0 ? (
           <View style={styles.emptyState}>
             <Icon name="checkmark-circle-outline" size={48} color="#34C759" />
@@ -143,7 +148,7 @@ export default function HomeScreen() {
 
       {/* Últimos Produtos Cadastrados */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>📦 Últimos Produtos</Text>
+        <Text style={styles.sectionTitle}><Icon name="cube-outline" size={32} color="#007AFF" /> Últimos Produtos</Text>
         {recentProducts.map(product => (
           <View key={product.id} style={styles.productCard}>
             <Text style={styles.productName}>{product.name}</Text>
@@ -156,7 +161,7 @@ export default function HomeScreen() {
 
       {/* Últimas Saídas */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>📤 Últimas Saídas</Text>
+        <Text style={styles.sectionTitle}><Icon name="cart-outline" size={32} color="#34C759" /> Últimas Saídas</Text>
         {recentTransactions.map(transaction => (
           <TouchableOpacity
             key={transaction.id}
@@ -184,6 +189,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  logo: {
+    width: 100,
+    height: 100,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    padding: 5,
+    borderRadius: 200,
+    marginBottom: 5,
+
   },
   header: {
     backgroundColor: '#007AFF',

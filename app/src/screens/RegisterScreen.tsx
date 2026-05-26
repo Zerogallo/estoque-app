@@ -10,6 +10,8 @@ import {
   Platform,
   ActivityIndicator,
   ScrollView,
+  ImageBackground,
+  Image,
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -49,14 +51,24 @@ export default function RegisterScreen({ navigation }: any) {
   };
 
   return (
+    <ImageBackground 
+          source={require('../../assets/app5.webp')} 
+          resizeMode="cover" 
+          style={styles.image}
+        >
+
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
-    >
+      >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.innerContainer}>
           <View style={styles.logoContainer}>
-            <Text style={styles.title}>📝 Cadastro</Text>
+            <Image 
+        source={require('../../assets/logo.png')} 
+        style={styles.logo} 
+      />
+            
             <Text style={styles.subtitle}>Crie sua conta para começar</Text>
           </View>
 
@@ -77,7 +89,7 @@ export default function RegisterScreen({ navigation }: any) {
               onChangeText={setEmail}
               autoCapitalize="none"
               keyboardType="email-address"
-            />
+              />
 
             <TextInput
               style={styles.input}
@@ -121,13 +133,27 @@ export default function RegisterScreen({ navigation }: any) {
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
+              </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  image: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  logo: {
+    width: 300,
+    height: 300,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    padding: 5,
+    borderRadius: 200,
+    marginBottom: 5,
+
+  },
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    
   },
   scrollContainer: {
     flexGrow: 1,
@@ -149,12 +175,15 @@ const styles = StyleSheet.create({
     color: '#007AFF',
   },
   subtitle: {
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderRadius: 15,
+    padding: 20,
     fontSize: 16,
     textAlign: 'center',
-    color: '#666',
+    color: '#000',
   },
   formContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
     borderRadius: 15,
     padding: 20,
     shadowColor: '#000',

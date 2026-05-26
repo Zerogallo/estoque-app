@@ -9,6 +9,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  ImageBackground,
+  Image,
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -35,13 +37,23 @@ export default function LoginScreen({ navigation }: any) {
   };
 
   return (
+      <ImageBackground 
+      source={require('../../assets/app5.webp')} 
+      resizeMode="cover" 
+      style={styles.image}
+    >
+
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
-    >
+      >
       <View style={styles.innerContainer}>
         <View style={styles.logoContainer}>
-          <Text style={styles.title}>📦 Estoque App</Text>
+          <Image 
+                  source={require('../../assets/logo.png')} 
+                  style={styles.logo} 
+                />
+          
           <Text style={styles.subtitle}>Gerencie seu estoque de forma inteligente</Text>
         </View>
 
@@ -63,7 +75,7 @@ export default function LoginScreen({ navigation }: any) {
             value={password}
             onChangeText={setPassword}
             secureTextEntry
-          />
+            />
 
           <TouchableOpacity
             style={styles.button}
@@ -80,7 +92,7 @@ export default function LoginScreen({ navigation }: any) {
           <TouchableOpacity
             onPress={() => navigation.navigate('Register')}
             style={styles.linkButton}
-          >
+            >
             <Text style={styles.linkText}>
               Não tem uma conta? <Text style={styles.linkHighlight}>Cadastre-se</Text>
             </Text>
@@ -88,13 +100,28 @@ export default function LoginScreen({ navigation }: any) {
         </View>
       </View>
     </KeyboardAvoidingView>
+            </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  image: {
+    flex: 1,
+    justifyContent: 'center',
+    
+  },
+  logo: {
+    width: 300,
+    height: 300,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    padding: 5,
+    borderRadius: 200,
+    marginBottom: 5,
+
+  },
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    
   },
   innerContainer: {
     flex: 1,
@@ -112,12 +139,15 @@ const styles = StyleSheet.create({
     color: '#007AFF',
   },
   subtitle: {
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderRadius: 15,
+    padding: 20,
     fontSize: 16,
     textAlign: 'center',
-    color: '#666',
+    color: '#000',
   },
   formContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
     borderRadius: 15,
     padding: 20,
     shadowColor: '#000',
